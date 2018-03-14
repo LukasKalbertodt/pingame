@@ -1,0 +1,7 @@
+[package]
+name = "pingame"
+version = "0.1.0"
+authors = ["ElisaBrausse <elisa.brausse@gmail.com>"]
+
+[dependencies]
+term-painter = "0.2"
