@@ -12,6 +12,7 @@ use players::Player;
 use gen::Generator;
 
 
+/// Colors of the main pins.
 #[derive(Debug, Clone, Copy, PartialEq, Rand)]
 #[allow(dead_code)]
 pub enum Color {
@@ -23,6 +24,7 @@ pub enum Color {
     Cyan,
 }
 
+/// An array of all possible colors.
 pub const ALL_COLORS: [Color; 6] = [
     Color::Blue,
     Color::Green,
@@ -32,6 +34,9 @@ pub const ALL_COLORS: [Color; 6] = [
     Color::Cyan,
 ];
 
+/// Four colored pins.
+///
+/// This is the type of the secret solution and of the guesses made by players.
 #[derive(Debug, Clone, Copy, PartialEq, Rand)]
 pub struct PinState {
     pins: [Color; 4],
@@ -40,20 +45,6 @@ pub struct PinState {
 impl PinState {
     pub fn new(pins: [Color; 4]) -> Self {
         Self { pins }
-    }
-}
-
-trait PlayerCreator {
-    fn new_player(&self) -> Box<Player>;
-}
-
-impl<F, P> PlayerCreator for F
-where
-    F: Fn() -> P,
-    P: Player + 'static,
-{
-    fn new_player(&self) -> Box<Player> {
-        Box::new(self())
     }
 }
 
@@ -78,9 +69,10 @@ fn main() {
         }
     };
 
-    let player_creator = match args.get(2).map(|s| s.as_ref()).unwrap_or("human") {
-        "human" => Box::new(|| players::Human::new()) as Box<PlayerCreator>,
-        "random" => Box::new(|| players::Random::new()),
+    let player = match args.get(2).map(|s| s.as_ref()).unwrap_or("human") {
+        "human" => Box::new(players::Human::new()) as Box<Player>,
+        "random" => Box::new(players::Random::new()),
+        "stepper" => Box::new(players::Stepper::new()),
         name => {
             println!("No player called '{}' is available", name);
             return;
@@ -103,16 +95,16 @@ fn main() {
         Mode::Play => {
             let correct = generator.gen();
             println!("{}", correct);
-            play(correct, &*player_creator.new_player());
+            play(correct, player);
         }
         Mode::Bench => {
-            bench(&*generator, player_creator);
+            bench(&*generator, player);
         }
     }
 }
 
 
-fn play(correct: PinState, player: &Player) {
+fn play(correct: PinState, player: Box<Player>) {
     let o = Oracle::new(correct);
     let res = player.play(&o);
     println!("Correct answer was: {}", correct);
@@ -123,14 +115,13 @@ fn play(correct: PinState, player: &Player) {
     }
 }
 
-fn bench(generator: &Generator, player_creator: Box<PlayerCreator>) {
+fn bench(generator: &Generator, player: Box<Player>) {
     let mut num_gave_up = 0;
     let mut num_wins = 0;
     let mut num_incorrect = 0;
     let mut evals = vec![];
 
     for _ in 0..100 {
-        let player = player_creator.new_player();
         let correct = generator.gen();
 
         let o = Oracle::new(correct);
