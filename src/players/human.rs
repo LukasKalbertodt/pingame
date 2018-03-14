@@ -1,18 +1,16 @@
 use std::fmt;
 
-
 use term_painter::{Color as TermColor, ToStyle};
 
 use {PinState, Color, Oracle, Eval};
 use super::Player;
 
-pub struct Human;
 
-impl Human {
-    pub fn new() -> Self {
-        Human
-    }
-}
+/// A player controlled by a human via command line.
+///
+/// The player is repeatedly asked for guesses and shown the evaluation by
+/// the oracle. Everything is nice and colorful :)
+pub struct Human;
 
 
 impl Player for Human {

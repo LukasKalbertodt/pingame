@@ -2,12 +2,10 @@ use std::cell::Cell;
 
 use super::PinState;
 
-#[derive(Debug, Clone)]
-pub struct Oracle {
-    correct: PinState,
-    num_evals: Cell<u32>,
-}
 
+/// An evaluation of a guess of the secret pin state.
+///
+/// This evaluation can only be obtained through the oracle.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Eval {
     num_white: u8,
@@ -15,20 +13,38 @@ pub struct Eval {
 }
 
 impl Eval {
+    /// Returns `true` iff the guess was completely correct.
     pub fn is_success(&self) -> bool {
         self.num_black == 4
     }
 
+    /// Returns the number of black pins. Each black pin represents a pin in
+    /// the guess that has the correct color and is at the correct position.
     pub fn num_black(&self) -> u8 {
         self.num_black
     }
 
+    /// Returns the number of white pins. Each white pin represents a pin in
+    /// the guess that has the correct color, but is in an incorrect position.
     pub fn num_white(&self) -> u8 {
         self.num_white
     }
 }
 
+
+/// This structure is given to the player as the only way to obtain information
+/// about the secret pin state.
+///
+/// It internally counts the number of times it was asked about an evaluation
+/// of a guess. This is used as a metric to rate different players.
+#[derive(Debug, Clone)]
+pub struct Oracle {
+    correct: PinState,
+    num_evals: Cell<u32>,
+}
+
 impl Oracle {
+    /// Creates a new oracle which knows about the given secret pin state.
     pub fn new(correct: PinState) -> Self {
         Self {
             correct,
@@ -36,6 +52,7 @@ impl Oracle {
         }
     }
 
+    /// Evaluates the given guess.
     pub fn eval_guess(&self, guess: &PinState) -> Eval {
         self.num_evals.set(self.num_evals.get() + 1);
 
@@ -59,6 +76,8 @@ impl Oracle {
         Eval { num_black, num_white }
     }
 
+    /// Returns the number of times `eval_guess` was called since creation of
+    /// this oracle.
     pub fn num_evals(&self) -> u32 {
         self.num_evals.get()
     }
@@ -72,7 +91,7 @@ mod tests {
     use super::{Eval, Oracle};
 
     #[test]
-    fn simple() {
+    fn everything_wrong() {
         let o = Oracle::new(PinState::new([Blue, Red, Yellow, Green]));
 
         // Everything wrong
@@ -83,6 +102,11 @@ mod tests {
                 num_black: 0,
             }
         );
+    }
+
+    #[test]
+    fn one_black() {
+        let o = Oracle::new(PinState::new([Blue, Red, Yellow, Green]));
 
         // One black
         assert_eq!(
@@ -92,6 +116,11 @@ mod tests {
                 num_black: 1,
             }
         );
+    }
+
+    #[test]
+    fn one_black_one_white() {
+        let o = Oracle::new(PinState::new([Blue, Red, Yellow, Green]));
 
         // One black, one white
         assert_eq!(
@@ -101,6 +130,11 @@ mod tests {
                 num_black: 1,
             }
         );
+    }
+
+    #[test]
+    fn correct_colors_incorrect_position() {
+        let o = Oracle::new(PinState::new([Blue, Red, Yellow, Green]));
 
         // Correct colors, but incorrect position
         assert_eq!(
@@ -110,6 +144,11 @@ mod tests {
                 num_black: 0,
             }
         );
+    }
+
+    #[test]
+    fn everything_correct() {
+        let o = Oracle::new(PinState::new([Blue, Red, Yellow, Green]));
 
         // Everything correct
         assert_eq!(

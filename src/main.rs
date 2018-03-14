@@ -55,6 +55,7 @@ fn main() {
         Bench,
     }
 
+    // Check game mode or quit of none was given.
     let args: Vec<_> = std::env::args().collect();
     let mode = match args.get(1).map(|s| s.as_ref()) {
         None => {
@@ -69,16 +70,20 @@ fn main() {
         }
     };
 
+    // Check the playername given via command line and create the corresponding
+    // player.
     let player = match args.get(2).map(|s| s.as_ref()).unwrap_or("human") {
-        "human" => Box::new(players::Human::new()) as Box<Player>,
-        "random" => Box::new(players::Random::new()),
-        "stepper" => Box::new(players::Stepper::new()),
+        "human" => Box::new(players::Human) as Box<Player>,
+        "random" => Box::new(players::Random),
+        "stepper" => Box::new(players::Stepper),
         name => {
             println!("No player called '{}' is available", name);
             return;
         }
     };
 
+    // Check the generator name given via command line and create the
+    // corresponding generator.
     let generator = match args.get(3).map(|s| s.as_ref()).unwrap_or("random") {
         "elisa" => Box::new(gen::Elisa) as Box<Generator>,
         "random" => Box::new(gen::Random) as Box<Generator>,
@@ -103,7 +108,7 @@ fn main() {
     }
 }
 
-
+/// Plays a single game with the given pin state and player.
 fn play(correct: PinState, player: Box<Player>) {
     let o = Oracle::new(correct);
     let res = player.play(&o);
@@ -115,6 +120,8 @@ fn play(correct: PinState, player: Box<Player>) {
     }
 }
 
+/// Executes many games with the given player and generator. Collects some
+/// metrics about how well the player played.
 fn bench(generator: &Generator, player: Box<Player>) {
     let mut num_gave_up = 0;
     let mut num_wins = 0;

@@ -1,14 +1,11 @@
 use {PinState, Oracle};
 use super::Player;
 
+/// A player which makes completely random guesses. As to be expected, its
+/// performance is pretty poor.
+///
+/// If no solution is not found after 50.000 attempts, this player gives up.
 pub struct Random;
-
-impl Random {
-    pub fn new() -> Self {
-        Random
-    }
-}
-
 
 impl Player for Random {
     fn play(&self, oracle: &Oracle) -> Option<PinState> {

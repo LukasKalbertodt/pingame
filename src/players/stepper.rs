@@ -2,13 +2,10 @@ use {Color, PinState, Oracle};
 use Color::*;
 use super::Player;
 
+/// A player which solves each individual digit of the secret state on its own.
+/// This player is a bit worse than the average human player, but a lot better
+/// than the random player.
 pub struct Stepper;
-
-impl Stepper {
-    pub fn new() -> Self {
-        Stepper
-    }
-}
 
 
 impl Player for Stepper {

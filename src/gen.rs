@@ -3,11 +3,14 @@ use rand::{self, Rng, random};
 use {ALL_COLORS, Color, PinState};
 use Color::*;
 
+
+/// Represents types able to generate secret pin states.
 pub trait Generator {
     fn gen(&self) -> PinState;
 }
 
 
+/// Elisa's pin state of choice. Always the same.
 pub struct Elisa;
 
 impl Generator for Elisa {
@@ -17,6 +20,7 @@ impl Generator for Elisa {
 }
 
 
+/// Generates pin states consisting of only one random color.
 pub struct Random1;
 
 impl Generator for Random1 {
@@ -26,6 +30,7 @@ impl Generator for Random1 {
     }
 }
 
+/// Generates pin states with two different colors.
 pub struct Random2;
 
 impl Generator for Random2 {
@@ -55,6 +60,7 @@ impl Generator for Random2 {
     }
 }
 
+/// Generates pin states with three random colors.
 pub struct Random3;
 
 impl Generator for Random3 {
@@ -75,6 +81,7 @@ impl Generator for Random3 {
 }
 
 
+/// Generates completely random pin states.
 pub struct Random;
 
 impl Generator for Random {
