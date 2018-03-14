@@ -1,9 +1,12 @@
 extern crate term_painter;
 
+mod gen;
 mod oracle;
 mod players;
 
 pub use oracle::{Eval, Oracle};
+use players::Player;
+use gen::Generator;
 
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -29,17 +32,55 @@ impl PinState {
 }
 
 
-pub trait Player {
-    fn play(&self, oracle: &Oracle) -> Option<PinState>;
-}
-
-
-
 fn main() {
-    use Color::*;
+    enum Mode {
+        Play,
+        Bench,
+    }
 
-    let human = players::Human::new();
-    play(PinState::new([Cyan, Green, Yellow, Red]), &human);
+    let args: Vec<_> = std::env::args().collect();
+    let mode = match args.get(1).map(|s| s.as_ref()) {
+        None => {
+            println!("Please specify the game mode: 'bench' or 'play'");
+            return;
+        }
+        Some("play") => Mode::Play,
+        Some("bench") => Mode::Bench,
+        _ => {
+            println!("Invalid game mode: only 'bench' or 'play' are allowed");
+            return;
+        }
+    };
+
+    let player = match args.get(2).map(|s| s.as_ref()) {
+        None => {
+            println!("Please specify player as second argument");
+            return;
+        }
+        Some("human") => Box::new(players::Human::new()) as Box<Player>,
+        Some(name) => {
+            println!("No player called '{}' is available", name);
+            return;
+        }
+    };
+
+    let generator = match args.get(3).map(|s| s.as_ref()).unwrap_or("elisa") {
+        "elisa" => Box::new(gen::Elisa) as Box<Generator>,
+        name => {
+            println!("No generator called '{}' is available", name);
+            return;
+        }
+    };
+
+    match mode {
+        Mode::Play => {
+            let correct = generator.gen();
+            play(correct, &*player);
+        }
+        Mode::Bench => {
+            unimplemented!()
+        }
+    }
 }
 
 

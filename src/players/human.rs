@@ -3,7 +3,8 @@ use std::fmt;
 
 use term_painter::{Color as TermColor, ToStyle};
 
-use {Player, PinState, Color, Oracle, Eval};
+use {PinState, Color, Oracle, Eval};
+use super::Player;
 
 pub struct Human;
 
