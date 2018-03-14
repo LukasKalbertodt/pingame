@@ -15,12 +15,12 @@ impl Human {
 
 
 impl Player for Human {
-    fn play(&self, oracle: &Oracle) -> PinState {
+    fn play(&self, oracle: &Oracle) -> Option<PinState> {
         loop {
             let guess = read_guess();
             let eval = oracle.eval_guess(&guess);
             if eval.is_success() {
-                return guess;
+                return Some(guess);
             }
 
             println!("{}  ⇒   {}", guess, eval);

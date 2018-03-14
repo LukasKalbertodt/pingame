@@ -32,7 +32,7 @@ impl PinState {
 
 
 pub trait Player {
-    fn play(&self, oracle: &Oracle) -> PinState;
+    fn play(&self, oracle: &Oracle) -> Option<PinState>;
 }
 
 
@@ -48,9 +48,9 @@ fn main() {
 fn play(correct: PinState, player: &Player) {
     let o = Oracle::new(correct);
     let res = player.play(&o);
-    if res == correct {
-        println!("Yeah :)");
-    } else {
-        println!("Baaad!");
+    match res {
+        None => println!("Player gave up :("),
+        Some(res) if res == correct => println!("Yeah :)"),
+        _ => println!("Incorrect answer :/"),
     }
 }
