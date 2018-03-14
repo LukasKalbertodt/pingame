@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 extern crate term_painter;
 
 mod oracle;
