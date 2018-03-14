@@ -57,7 +57,7 @@ fn main() {
             println!("Please specify player as second argument");
             return;
         }
-        Some("human") => Box::new(players::Human::new()) as Box<Player>,
+        Some("human") => || Box::new(players::Human::new()) as Box<Player>,
         Some(name) => {
             println!("No player called '{}' is available", name);
             return;
@@ -75,10 +75,10 @@ fn main() {
     match mode {
         Mode::Play => {
             let correct = generator.gen();
-            play(correct, &*player);
+            play(correct, &*player());
         }
         Mode::Bench => {
-            unimplemented!()
+            bench(&*generator, player);
         }
     }
 }
@@ -92,4 +92,37 @@ fn play(correct: PinState, player: &Player) {
         Some(res) if res == correct => println!("Yeah :)"),
         _ => println!("Incorrect answer :/"),
     }
+}
+
+fn bench<F>(generator: &Generator, mut player: F)
+where
+    F: FnMut() -> Box<Player>,
+{
+    let mut num_gave_up = 0;
+    let mut num_wins = 0;
+    let mut num_incorrect = 0;
+    let mut evals = vec![];
+
+    for _ in 0..100 {
+        let player = player();
+        let correct = generator.gen();
+
+        let o = Oracle::new(correct);
+        let res = player.play(&o);
+        match res {
+            None => num_gave_up += 1,
+            Some(res) if res == correct => num_wins += 1,
+            _ => num_incorrect += 1,
+        }
+        evals.push(o.num_evals());
+    }
+
+    println!("number won: {}", num_wins);
+    println!("give ups: {}", num_gave_up);
+    println!("number icorrect: {}", num_incorrect);
+
+    let avg_evals = evals.iter()
+        .map(|&n| n as f64)
+        .sum::<f64>() / evals.len() as f64;
+    println!("avg num evals: {}", avg_evals);
 }

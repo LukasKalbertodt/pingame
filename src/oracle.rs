@@ -1,8 +1,11 @@
+use std::cell::Cell;
+
 use super::PinState;
 
 #[derive(Debug, Clone)]
 pub struct Oracle {
     correct: PinState,
+    num_evals: Cell<u32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -27,10 +30,15 @@ impl Eval {
 
 impl Oracle {
     pub fn new(correct: PinState) -> Self {
-        Self { correct }
+        Self {
+            correct,
+            num_evals: Cell::new(0),
+        }
     }
 
     pub fn eval_guess(&self, guess: &PinState) -> Eval {
+        self.num_evals.set(self.num_evals.get() + 1);
+
         let mut num_black = 0;
         let mut num_white = 0;
         let mut remaining = self.correct.pins.to_vec();
@@ -49,6 +57,10 @@ impl Oracle {
         }
 
         Eval { num_black, num_white }
+    }
+
+    pub fn num_evals(&self) -> u32 {
+        self.num_evals.get()
     }
 }
 
