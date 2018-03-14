@@ -43,6 +43,20 @@ impl PinState {
     }
 }
 
+trait PlayerCreator {
+    fn new_player(&self) -> Box<Player>;
+}
+
+impl<F, P> PlayerCreator for F
+where
+    F: Fn() -> P,
+    P: Player + 'static,
+{
+    fn new_player(&self) -> Box<Player> {
+        Box::new(self())
+    }
+}
+
 
 fn main() {
     enum Mode {
@@ -64,8 +78,9 @@ fn main() {
         }
     };
 
-    let player = match args.get(2).map(|s| s.as_ref()).unwrap_or("human") {
-        "human" => || Box::new(players::Human::new()) as Box<Player>,
+    let player_creator = match args.get(2).map(|s| s.as_ref()).unwrap_or("human") {
+        "human" => Box::new(|| players::Human::new()) as Box<PlayerCreator>,
+        "random" => Box::new(|| players::Random::new()),
         name => {
             println!("No player called '{}' is available", name);
             return;
@@ -88,10 +103,10 @@ fn main() {
         Mode::Play => {
             let correct = generator.gen();
             println!("{}", correct);
-            play(correct, &*player());
+            play(correct, &*player_creator.new_player());
         }
         Mode::Bench => {
-            bench(&*generator, player);
+            bench(&*generator, player_creator);
         }
     }
 }
@@ -108,17 +123,14 @@ fn play(correct: PinState, player: &Player) {
     }
 }
 
-fn bench<F>(generator: &Generator, mut player: F)
-where
-    F: FnMut() -> Box<Player>,
-{
+fn bench(generator: &Generator, player_creator: Box<PlayerCreator>) {
     let mut num_gave_up = 0;
     let mut num_wins = 0;
     let mut num_incorrect = 0;
     let mut evals = vec![];
 
     for _ in 0..100 {
-        let player = player();
+        let player = player_creator.new_player();
         let correct = generator.gen();
 
         let o = Oracle::new(correct);
